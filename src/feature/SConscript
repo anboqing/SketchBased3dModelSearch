@@ -1,0 +1,11 @@
+Import('env')
+
+# print 'in the ** feature ** directory , env is',env
+
+# TODO : build feature to $(ProjectDir)/lib
+
+# build an library named libsbe_feature
+# env.Library('libsbe_feature',['galif.cpp','detector.cpp'])
+env.SharedLibrary('libsbe_feature',['galif.cpp','detector.cpp','#src/config.cpp'])
+
+

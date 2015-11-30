@@ -1,0 +1,5 @@
+Import('env')
+
+env.Program('extract_all_features',['extract_all_features.cpp','#src/feature/galif.cpp','#src/feature/detector.cpp','#src/config.cpp'])
+
+env.Program('generate_vocabulary',['generate_vocabulary.cpp','#src/feature/galif.cpp','#src/feature/detector.cpp','#src/config.cpp'])

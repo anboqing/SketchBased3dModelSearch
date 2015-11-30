@@ -1,0 +1,4 @@
+Import('env')
+
+SConscript(['feature/SConscript'],exports='env',variant_dir='#lib',duplicate=0)
+SConscript(['vocabulary/SConscript'],exports='env',variant_dir='#bin',duplicate=0)

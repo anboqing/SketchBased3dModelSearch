@@ -1,0 +1,18 @@
+#encoding=utf-8
+# this is a subdirectory building script to debug use
+
+# import environment settings from parent to this file
+Import('env')
+
+# print env['CPPPATH']
+# print env['LIBS']
+
+source_list = ['galif_debug.cpp','#src/feature/galif.cpp','#src/feature/detector.cpp','#src/config.cpp']
+source_list2 = ['detector_debug.cpp','#src/feature/detector.cpp']
+env.Program(target='debug_galif',source=source_list)
+#env.Program(target='debug_detector',source=source_list2)
+
+# 改用链接到编译好的feature静态库的方式 是错的！！为神马！！！
+#env.Append(LIBS='sbe_feature')
+#env.Append(LIBPATH='#lib/')
+#env.Program(target='debug_galif',source='galif_debug.cpp')

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feature><sketchwidth>256</sketchwidth><orientation_num>4</orientation_num><tile_num>4</tile_num><peak_frequency>0.13</peak_frequency><line_width>0.02</line_width><lambda>0.3</lambda><feature_size>0.1</feature_size><is_normalize_hist>true</is_normalize_hist><normalize_type>l2</normalize_type><detector><name>grid</name></detector><num_of_samples>625</num_of_samples></feature>
