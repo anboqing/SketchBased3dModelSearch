@@ -1,0 +1,3 @@
+Import('env')
+
+env.Program('generate_hist',['generate_histogram.cpp','#src/config.cpp'])

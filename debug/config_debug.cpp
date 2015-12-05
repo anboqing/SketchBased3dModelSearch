@@ -14,6 +14,9 @@ int main(){
     std::shared_ptr<SketchGenConfig> sc = SketchGenConfig::GetInstance();
     sc->save("sketch.conf");
     */
+
+    std::shared_ptr<VocabularyConfig> vc = VocabularyConfig::GetInstance();
+    vc->save("vocabulary.conf");
     
     std::shared_ptr<PathConfig> config = PathConfig::GetInstance();
     

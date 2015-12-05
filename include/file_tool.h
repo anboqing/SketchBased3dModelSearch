@@ -1,8 +1,7 @@
 /* Copyright (c) 2015 An Boqing
  * All rights reserved.
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0 
+ * You may obtain a copy of the License at * http://www.apache.org/licenses/LICENSE-2.0 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an AS IS BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +23,147 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <vector>
+#include <map>
+#include <unordered_map>
+#include <regex>
+
 #include <boost/filesystem.hpp>
 
 #include <stdlib.h>
 
 #include <glog/logging.h>
 
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 保存倒排索引
+ *
+ * @Param filename
+ * @Param inverse_index
+ */
+/* ------------------------------------------------------------------------*/
+void SaveIndex(const std::string& filename,
+        std::map<std::size_t,std::map<std::size_t,float> > inverse_index){
+    std::ofstream ofs(filename);
+    if(!ofs.is_open()){
+        LOG(INFO) << " open index file error " ; 
+    }
+    for(auto& wordid_inverselist : inverse_index){
+        ofs << wordid_inverselist.first << "\t"; 
+        for(auto& docid_tfidf : wordid_inverselist.second){
+            ofs << docid_tfidf.first << " " << docid_tfidf.second <<" "; 
+        }
+        ofs << std::endl;
+    }
+    ofs.close();
+}
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 读取倒排列表
+ *
+ * @Param filename
+ * @Param inverse_index
+ */
+/* ------------------------------------------------------------------------*/
+void LoadIndex(const std::string& filename,
+        std::unordered_map<std::size_t,std::map<std::size_t,float> > inverse_index){
+    std::ifstream ifs(filename);
+    if(!ifs.is_open()){
+        LOG(INFO) << " open index file error " ; 
+    }
+    std::string line;
+    while(std::getline(ifs,line)){
+        std::istringstream iss(line); 
+        std::size_t word_index;
+        iss >> word_index;
+        std::map<std::size_t,float> inverse_list;
+        std::size_t doc_index;
+        float tfidf;
+        while(iss >> doc_index && iss >> tfidf){
+            inverse_list.insert(std::make_pair(doc_index,tfidf)); 
+        }
+        inverse_index.insert(std::make_pair(word_index,inverse_list));
+    }
+    ifs.close();
+}
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 存储 <word_id,term-frequency>  单词在vocabulary中的下标和单词在所有文档出现的频率
+ *
+ * @Param filename
+ * @Param term_frequency_counter
+ */
+/* ------------------------------------------------------------------------*/
+void SaveTFC(const std::string& filename,std::map<std::size_t,std::size_t>& term_frequency_counter){
+    std::ofstream ofs(filename);
+    if(!ofs.is_open()){
+        LOG(FATAL) << "open file error "  ; 
+    }
+    for(auto pair : term_frequency_counter){
+        ofs << pair.first << " " << pair.second << std::endl;
+    }
+    ofs.close();
+}
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 读取 单词-文档频率到map中
+ *
+ * @Param filename
+ * @Param term_frequency_counter
+ */
+/* ------------------------------------------------------------------------*/
+void LoadTFC(const std::string& filename,std::map<std::size_t,std::size_t>& term_frequency_counter){
+    std::ifstream ifs(filename);
+    if(!ifs.is_open()){
+        LOG(FATAL) << "open file error " ;
+    }
+    std::string line;
+    while(getline(ifs,line)){
+        std::istringstream iss(line);
+        std::size_t word_index,word_count;
+        iss >> word_index >> word_count;
+        term_frequency_counter.insert(std::make_pair(word_index,word_count));
+    }
+    ifs.close();
+}
+
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 从特征文件名里面提取出来 模型名称、sketch编号、row 和col，eg. D00001_1_218_64.dat row=218,col=64
+ *
+ * @Param name : 文件名
+ * @Param model_name : 模型文件名
+ * @Param sketch_index: 模型生成的草图的编号 1~102
+ * @Param row : 特征矩阵的row number
+ * @Param col : 特征矩阵的col number
+ *
+ * @Returns   : status
+ */
+/* ------------------------------------------------------------------------*/
+bool GetMetaByName(const std::string& name,
+        std::string& model_name,
+        unsigned* sketch_index,
+        unsigned* row,
+        unsigned *col){
+    // 正则表达式提取
+    std::smatch results;
+    std::regex pattern("(.*)(_)(.*?)(_)(.*?)(_)(.*?)\\.dat"); 
+    if(std::regex_match(name,results,pattern)){
+        model_name = results[1].str();
+        *sketch_index = atoi((results[3]).str().c_str());
+        *row = atoi((results[5]).str().c_str());   
+        *col = atoi((results[7]).str().c_str());   
+        return true;
+    }else{
+        return false;
+    }
+}
 
 /* ------------------------------------------------------------------------*/
 /**
@@ -189,7 +321,7 @@ int WriteCVMat2File(std::string fileName, cv::Mat& matData)
     // 写入数据  
     for (int r = 0; r < matData.rows; r++)  {  
         for (int c = 0; c < matData.cols; c++)  {  
-            uchar data = matData.at<uchar>(r,c);  //读取数据，at<type> - type 是矩阵元素的具体数据格式  
+            float data = matData.at<float>(r,c);  //读取数据，at<type> - type 是矩阵元素的具体数据格式  
             outFile << data << "\t" ;   //每列数据用 tab 隔开  
         }  
         outFile << std::endl;  //换行  
@@ -262,5 +394,86 @@ int WriteVec(const std::string& root_path,
     return EXIT_SUCCESS;
 }
 
+
+template <typename DATA>
+int LoadData2stdVec(const std::string data_path,
+        std::vector<std::vector<DATA> >& data){
+    std::ifstream infile(data_path);
+    if(!infile.is_open()){
+        LOG(FATAL) << " file open error ";    
+        return -1;
+    }
+    std::string line;
+    while(getline(infile,line)){
+        std::istringstream iss(line);
+        std::vector<DATA> temp_vec;
+        DATA element;
+        while(iss >> element){
+            temp_vec.push_back(element); 
+        }
+        data.push_back(temp_vec);
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 把计算出的所有sketch的histogram存到文件
+ *
+ * @Param data
+ * @Param filename
+ *
+ * @Returns   
+ */
+/* ------------------------------------------------------------------------*/
+template <typename KEY_T,typename VALUE_T>
+int SaveHist(const std::vector<std::map<KEY_T,VALUE_T> >& data,const std::string& filename){
+    
+    std::ofstream ofs(filename);
+    if(!ofs.is_open()){
+        LOG(FATAL)<< "file open error";
+    }
+
+    for(auto hist : data){
+        for(auto pair : hist){
+            ofs << pair.first << " " << pair.second << " "; 
+        } 
+        ofs << std::endl;
+    }
+    
+    ofs.close();
+    return 0;
+}
+
+/* ------------------------------------------------------------------------*/
+/**
+ * @brief 把存起来的直方图读取到内存中
+ * @Param data
+ * @Param filename
+ * @Returns   
+ */
+/* ------------------------------------------------------------------------*/
+template <typename KEY_T,typename VALUE_T>
+int LoadHist(std::vector<std::map<KEY_T,VALUE_T> >& data,const std::string& filename){
+    std::ifstream ifs(filename);
+    if(!ifs.is_open()){
+        LOG(FATAL)<< "file open error";
+    }
+
+    std::string line;
+    while(getline(ifs,line)){
+        std::istringstream iss(line);        
+        std::map<KEY_T,VALUE_T> hist;
+        KEY_T doc_id;
+        VALUE_T frequency;
+        while(iss >> doc_id && iss >> frequency){
+            hist[doc_id] = frequency; 
+        }
+        data.push_back(hist);
+    }
+
+    ifs.close();
+    return 0;
+}
 
 #endif

@@ -2,3 +2,6 @@ Import('env')
 
 SConscript(['feature/SConscript'],exports='env',variant_dir='#lib',duplicate=0)
 SConscript(['vocabulary/SConscript'],exports='env',variant_dir='#bin',duplicate=0)
+SConscript(['quantize/SConscript'],exports='env',variant_dir='#bin/quantize',duplicate=0)
+SConscript(['index/SConscript'],exports='env',variant_dir='#bin/index',duplicate=0)
+SConscript(['query/SConscript'],exports='env',variant_dir='#bin/query',duplicate=0)

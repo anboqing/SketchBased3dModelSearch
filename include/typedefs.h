@@ -2,9 +2,9 @@
 #define __TYPEDEFS_H__
 
 #include <vector>
-
-
-#include <vector>
+#include <map>
+#include <unordered_map> // 倒排索引
+#include <queue>
 #include <string>
 #include <set>
 #include <cmath>
@@ -54,6 +54,10 @@ typedef std::pair<float, Index_t> ResultItem_t;
 // TODO: 属性树：是解析配置文件用的
 typedef boost::property_tree::ptree PropertyTree_t;
 
+// 直方图结构
+typedef std::map<std::size_t,std::size_t> Hist_t;
+// 倒排索引结构
+typedef std::unordered_map<std::size_t,std::map<std::size_t,float> > InverseIndex_t;
 
 } //namespace sbe
 

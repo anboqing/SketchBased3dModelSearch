@@ -69,19 +69,30 @@ bool GetSizeByName(const std::string& name,unsigned* row,unsigned *col){
 
 int main(int argc, char**argv){
 
-    if(argc<5){
+    if(argc<3){
         std::cout << "Usage : ./" << std::string(argv[0] );
         std::cout << "  path/to/path.conf";
-        std::cout << " total_sample_num " ;
-        std::cout << " kmeans_centroids_num " ;
-        std::cout << " vocabulary_file_path ";
+        std::cout << " path/to/vocabulary.xml" ;
         std::cout<< std::endl; 
         return EXIT_FAILURE;
     }
 
-    const long int TOTAL_SAMPLE = atoi(argv[2]); // 总的采样数
-    const long int CENTROIDS_NUM = atoi(argv[3]); //　聚类中心数 TODO: 改为用配置文件读取
-    const std::string vocabulary_data_path(argv[4]);
+    std::shared_ptr<VocabularyConfig> vconf = VocabularyConfig::GetInstance();
+    vconf->load(argv[2]);
+
+    const long int TOTAL_SAMPLE = vconf->_total_sample_num;// 总的采样数
+    const long int CENTROIDS_NUM = vconf->_centroids_num; //　聚类中心数 
+    const std::string vocabulary_data_path = vconf->_vocabulary_data_path;
+    const int batch_num = vconf->_batch_num; // 配置文件
+    const unsigned int MAX_ITER = vconf->_max_iter;
+    const double accuracy_threashold = vconf->_accuracy_threshold;
+
+    LOG(INFO) << TOTAL_SAMPLE;
+    LOG(INFO) << CENTROIDS_NUM;
+    LOG(INFO) << vocabulary_data_path;
+    LOG(INFO) << batch_num;
+    LOG(INFO) << MAX_ITER;
+    LOG(INFO) << accuracy_threashold;
 
     std::vector<std::string> feature_path_vec; // 存储所有 特征文件名 的路径
 
@@ -98,13 +109,15 @@ int main(int argc, char**argv){
     }
     
     long int sample_feature_count = 0;
-    const int batch_num = 100; // TODO 配置文件
 
     // 随机数生成器
     std::random_device  rd;      
     std::mt19937 gen(rd());
 
-    while(sample_feature_count<=TOTAL_SAMPLE){
+    bool stop = false;
+
+    while(stop==false){
+         //初始化这一批样本
          std::vector<std::string> batch_vec;
          batch_vec.resize(batch_num);
 
@@ -124,17 +137,19 @@ int main(int argc, char**argv){
             // 加入待聚类特征集合
             all_feature_m.push_back(feature_mat);
             sample_feature_count +=row;
-            DLOG(INFO)<<"sample_feature_count : " << sample_feature_count;
+            if(sample_feature_count>=TOTAL_SAMPLE){
+                stop  = true;
+                LOG(INFO) << "stop sample , total sample num : "<< sample_feature_count;
+                break;
+            }
          }
-         // 过滤掉空特征(提取时已经过滤了)
     }
 
     // 聚类出的聚类中心保存起来形成　vocabulary
     cv::Mat centers,labels;
 
-    const unsigned int MAX_ITER = 1000;
-    const double accuracy_threashold = 0.1;
-
+    LOG(INFO) << " run kmeans ... ";
+    
     cv::kmeans(all_feature_m,
             CENTROIDS_NUM,
             labels,
@@ -146,18 +161,11 @@ int main(int argc, char**argv){
             cv::KMEANS_PP_CENTERS,
             centers);
 
+    DLOG(INFO) << centers.size() << " " << centers.rows << " " << centers.cols;
+
     // 保存聚类中心
-    std::ofstream ofs(vocabulary_data_path);
-    if(ofs.is_open()){
-        for(int i = 0 ;i<centers.rows;++i){
-            for(int j = 0; j<centers.cols ; ++j){
-                ofs << centers.at<float>(i,j) << " "; 
-            } 
-            std::cout << std::endl;
-        }
-    }
-    ofs.close();
-    /*
+    WriteCVMat2File(vocabulary_data_path,centers);
+        /*
     for(int i = 0 ;i<centers.rows;++i){
         for(int j = 0; j<centers.cols ; ++j){
             std::cout << centers.at<float>(i,j) << " "; 

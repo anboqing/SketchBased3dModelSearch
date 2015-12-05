@@ -1,5 +1,5 @@
 
-env = Environment(CPPPATH=['#include/','#include/feature/'],
+env = Environment(CPPPATH=['#include/','#include/feature/','#include/quantize/'],
 CXXFLAGS="-std=c++0x")
 
 #env.Append(CCFLAGS='-std=c++11')

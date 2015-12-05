@@ -2,11 +2,55 @@
 #include <fstream>
 #include <glog/logging.h>
 
+std::shared_ptr<VocabularyConfig> VocabularyConfig::_instance;
+std::mutex VocabularyConfig::_mutex;
+
+//@brief the singleton machinisim
+std::shared_ptr<VocabularyConfig> VocabularyConfig::GetInstance(){
+    if(_instance.get()==0){
+        // for the sake of thread safe 
+        std::lock_guard<std::mutex> guard(_mutex);  
+        if(_instance.get() == 0){
+            _instance.reset(new VocabularyConfig()); 
+        }
+    }    
+    return _instance;
+}
+
+
+void VocabularyConfig::load(const std::string& filename){
+    using boost::property_tree::ptree;
+    ptree pt;
+    //load xml file into the property tree
+    read_xml(filename,pt);
+
+    _total_sample_num = pt.get<long>("vocabulary.totoal_sample_num");
+    _centroids_num = pt.get<long>("vocabulary.centroids_num");
+    _vocabulary_data_path = pt.get<std::string>("vocabulary.vocabulary_data_path");
+    _batch_num = pt.get<unsigned int>("vocabulary.batch_num");
+    _max_iter = pt.get<unsigned int>("vocabulary.max_iter");
+    _accuracy_threshold = pt.get<double>("vocabulary.accuracy_threshold");
+}
+
+void VocabularyConfig::save(const std::string& filename){
+    using boost::property_tree::ptree;
+    ptree pt;
+    // put property
+    pt.put("vocabulary.totoal_sample_num",_total_sample_num);
+    pt.put("vocabulary.centroids_num",_centroids_num);
+    pt.put("vocabulary.vocabulary_data_path",_vocabulary_data_path);
+    pt.put("vocabulary.batch_num",_batch_num);
+    pt.put("vocabulary.max_iter",_max_iter);
+    pt.put("vocabulary.accuracy_threshold",_accuracy_threshold);
+    // write to disk file
+    write_xml(filename,pt);
+}
+
+
 
 // static member need to declared
 std::shared_ptr<SketchGenConfig> SketchGenConfig::_sketch_instance;
 std::mutex SketchGenConfig::_sketch_mutex;
-
 
 //@brief the singleton machinisim
 std::shared_ptr<SketchGenConfig> SketchGenConfig::GetInstance(){

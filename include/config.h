@@ -105,4 +105,25 @@ class FeatureConfig: public Configuration{
         static std::shared_ptr<FeatureConfig> GetInstance();
 };
 
+class VocabularyConfig: public Configuration{
+    public:
+        //@overwrite
+        void load(const std::string& filename);
+        void save(const std::string& filename);
+    public:
+        long int _total_sample_num;
+        long int _centroids_num;
+        std::string _vocabulary_data_path;
+        unsigned int _batch_num;
+        unsigned int _max_iter;
+        double _accuracy_threshold;
+    private:
+        // used for singleton pattern
+        VocabularyConfig(){}
+        static std::shared_ptr<VocabularyConfig> _instance;
+        static std::mutex _mutex;
+    public:
+        static std::shared_ptr<VocabularyConfig> GetInstance();
+};
+
 #endif

@@ -1,0 +1,3 @@
+Import('env')
+
+env.Program('query',['query.cpp','#src/config.cpp','#src/feature/detector.cpp','#src/feature/galif.cpp'])

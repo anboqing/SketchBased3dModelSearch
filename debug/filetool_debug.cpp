@@ -5,14 +5,21 @@ g++ filetool_debug.cpp ../src/config.cpp -I../include -lboost_system -lboost_fil
  */
 
 #include <iostream>
+#include <vector>
+
 
 int main(int argc,char** argv){
 
     google::InitGoogleLogging(argv[0]);
 
+    if(argc<2){
+        return -1; 
+    }
+
     using std::cout;
     using std::endl;
 
+    /*
     std::shared_ptr<PathConfig> conf = PathConfig::GetInstance();
     conf->load("path.conf");
 
@@ -26,6 +33,12 @@ int main(int argc,char** argv){
     for(auto name : file_list){
         cout << name << endl; 
     }
+    */
+    using namespace std;
+    vector<vector<float> > data;
+    Read2Vec(argv[1],data);
+    
+    cout << data.size() << " " << data[0].size() << endl;
 
     return 0;
 }

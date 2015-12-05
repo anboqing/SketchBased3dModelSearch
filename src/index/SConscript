@@ -1,0 +1,3 @@
+Import('env')
+
+env.Program('generate_index',['generate_index.cpp','#src/config.cpp'])
