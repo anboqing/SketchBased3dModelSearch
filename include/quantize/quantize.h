@@ -84,7 +84,7 @@ float CalcSimilarity(const vector<float>& lhs,const vector<float>& rhs){
     len = CalcLength(lhs)*CalcLength(rhs);
     dot = CalcInnerProduct(lhs,rhs);
     if(len==0){
-        return 1; 
+        DLOG(FATAL) << " feature vector is empty feature !" ;
     }
     return dot/(len);
 }
@@ -98,10 +98,12 @@ float CalcMapSimilarity(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs)
     dot = CalcMapInnerProduct(lhs,rhs);
     DLOG(INFO) << "end mapprod ";
     if(len==0){
-        return 1; 
+        DLOG(FATAL) << " feature vector is empty feature !" ;
     }
     return dot/len;
 }
+
+
 
 /* ------------------------------------------------------------------------*/
 /**

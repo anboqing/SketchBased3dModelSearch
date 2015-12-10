@@ -74,15 +74,19 @@ int main(int argc,char** argv){
 // 读取倒排索引
     const std::string& index_path = pconf->_conf_map["index_path"];
     LoadIndex(index_path,inverse_index);
+    LOG(INFO) << " inverse index size : " << inverse_index.size() ;
 // 读取每篇文档的直方图
     const std::string& hist_path_tfidf = pconf->_conf_map["hist_path_tfidf"];
     LoadHist<std::size_t,float>(hist_tfidf,hist_path_tfidf);
+    LOG(INFO) << " histogram size: " << hist_tfidf.size();
 // 读取每个单词的term_frequency
     const std::string& tfc_path = pconf->_conf_map["tfc_path"];
     LoadTFC(tfc_path,term_frequency_map);
+    LOG(INFO) << "term frequency size : " << term_frequency_map.size();
 // 读取单词表
     const string& vocabulary_path = pconf->_conf_map["vocabulary_path"];
     LoadData2stdVec(vocabulary_path,vocabulary);
+    LOG(INFO) << "vocabulary size : "<<vocabulary.size();
 // 读取查询草图
     cv::Mat query_img = cv::imread(argv[2]);    
 // 提取查询草图特征
@@ -95,6 +99,14 @@ int main(int argc,char** argv){
 // quantize查询草图生成查询histogram
     LOG(INFO) << " quantizing query feature ... " ;
     Hist_t query_hist = QuantizeFeature(features,vocabulary);     
+
+#ifndef NDEBUG
+    cout << "DEBUG query_hist " << endl;
+    for(auto& p : query_hist){
+        cout <<  p.first << "  " << p.second << endl;
+    }
+#endif
+
 // -在倒排索引中提取包含查询词的所有文档集合
     LOG(INFO) << " retrieve candidate doc set .. " ;
     size_t sum_wordcount=0; // 查询草图的单词数量

@@ -107,48 +107,63 @@ int main(int argc, char**argv){
     if(GetFileListInPath(feature_data_path,feature_path_vec)){
         LOG(FATAL)<< " get feature file list failed !";
     }
-    
-    long int sample_feature_count = 0;
-
     // 随机数生成器
     std::random_device  rd;      
     std::mt19937 gen(rd());
 
+    // 把列表打乱
+    shuffle(feature_path_vec.begin(),feature_path_vec.end(), gen);
+
+    long int sample_feature_count = 0;
+    
+    // 把所有特征文件读到内存里，或者一次读一批特征文件，随机采样若干个特征,直到采样够足够的特征
+    std::vector<std::string>::size_type fpathv_idx = 0; 
+
+    static size_t count = 0;
+
     bool stop = false;
-
-    // 这里不对，应该改成读取所有feature到内存
-    // 然后随机选择feature
-    // 不应该随机选文件，再选feature,因为随机选文件又没有去重，有些文件就没被选到
-    // 有些sketch 就没有用到聚类中，quantize的时候肯定不会有相同的feature
-    while(stop==false){
-         //初始化这一批样本
-         std::vector<std::string> batch_vec;
-         batch_vec.resize(batch_num);
-
-         // 均匀的选取 batch_num个文件名
-         shuffle(feature_path_vec.begin(),feature_path_vec.end(),gen);
-         std::copy_n(feature_path_vec.begin(),batch_num,batch_vec.begin());
-         
-         // 把batch中所有文件中的feature读进内存(cv::Mat）
-            //从每个文件名中提取出row,col
-         for(auto path : batch_vec){
-            unsigned row,col;
-            GetSizeByName(path,&row,&col);
+    
+    while(!stop){
+        cv::Mat batch_features_mat; //存储当前这一批特征文件中的所有feature
+        // 读一批特征文件到内存
+        for(;fpathv_idx<feature_path_vec.size()&&fpathv_idx<fpathv_idx+batch_num;fpathv_idx++){
+            // 读一个特征文件中的所有特征到feature_mat
             cv::Mat feature_mat;
-            if(0!=LoadData2cvMat(path,feature_mat,row,col)){
-                LOG(FATAL) << " load data to cv mat error ";
+
+            unsigned row,col;
+            GetSizeByName(feature_path_vec[fpathv_idx],&row,&col);
+            if(0!=LoadData2cvMat(feature_path_vec[fpathv_idx],feature_mat,row,col)){
+                LOG(FATAL) << " load data to cv mat error " ; 
             }
-            // 加入待聚类特征集合
-            all_feature_m.push_back(feature_mat);
-            sample_feature_count +=row;
-            if(sample_feature_count>=TOTAL_SAMPLE){
-                stop  = true;
-                LOG(INFO) << "stop sample , total sample num : "<< sample_feature_count;
-                break;
+
+            // random N ： 在这张sketch里选择N个特征加入候选集;
+            std::size_t N = rd()%feature_mat.rows+1;
+            // 在当前草图这些特征里面随机选择若干个特征加入batch_features_mat;
+            // random perm
+            CHECK(feature_mat.rows!=0);
+            std::vector<std::size_t> index_vec(feature_mat.rows);// feature_mat的行号表，随机shuffle这张表
+            count = 0;
+            for_each(index_vec.begin(),index_vec.end(),[](std::size_t& v){v = count++;});
+            // 把当前sketch的所有features的下标洗牌，然后取前N个加入feature_mat
+            shuffle(index_vec.begin(),index_vec.end(),gen);
+
+            size_t before = batch_features_mat.rows;
+            for(vector<size_t>::size_type idx = 0; idx < N ; ++idx){
+                batch_features_mat.push_back(feature_mat.row(index_vec[idx])); 
             }
-         }
+            CHECK(batch_features_mat.rows - before == N);
+            sample_feature_count += N;
+            if(sample_feature_count >= TOTAL_SAMPLE ){
+                stop = true;
+                break; 
+            }
+        }
+        // 把这一批feature加入候选集
+        all_feature_m.push_back(batch_features_mat);
     }
 
+    LOG(INFO) << " \ntotal feature number : " << all_feature_m.rows ;
+    
     // 聚类出的聚类中心保存起来形成　vocabulary
     cv::Mat centers,labels;
 
@@ -165,30 +180,9 @@ int main(int argc, char**argv){
             cv::KMEANS_PP_CENTERS,
             centers);
 
-    DLOG(INFO) << centers.size() << " " << centers.rows << " " << centers.cols;
+    DLOG(INFO) <<"centers info : "<< centers.size() << " " << centers.rows << " " << centers.cols;
 
     // 保存聚类中心
     WriteCVMat2File(vocabulary_data_path,centers);
-        /*
-    for(int i = 0 ;i<centers.rows;++i){
-        for(int j = 0; j<centers.cols ; ++j){
-            std::cout << centers.at<float>(i,j) << " "; 
-        } 
-        std::cout << std::endl;
-    }
-
-    std::cerr << centers.size() << std::endl;
-    */
-
-    /*
-    for(int i = 0 ;i<labels.rows;++i){
-        for(int j = 0; j<labels.cols ; ++j){
-            std::cout << labels.at<int>(i,j) << std::endl; 
-        } 
-        std::cout << std::endl;
-    }
-    
-    std::cerr << labels.size() << std::endl;
-    */
     return 0;
 }
