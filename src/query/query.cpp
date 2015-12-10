@@ -116,6 +116,7 @@ int main(int argc,char** argv){
         sum_wordcount+=wordid_wc.second;
         // 在倒排索引中查找当前单词的倒排列表
         map<size_t,float>& inverse_list = inverse_index[word_id];
+        DLOG(INFO) << "inverse list size: " << inverse_list.size();
         CHECK(inverse_list.size()!=0);
         // 遍历当前倒排列表，把其中的所有文档id拿出来存入候选doc集合
         for(auto& docid_weigth : inverse_list){

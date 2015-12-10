@@ -22,6 +22,7 @@
 #include <vector>
 #include <glog/logging.h>
 #include <math.h>
+#include <limits>
 
 #include "typedefs.h"
 
@@ -115,6 +116,7 @@ float CalcMapSimilarity(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs)
  * @Returns  量化好的直方图 （map<word_idx,frequency>）
  */
 /* ------------------------------------------------------------------------*/
+/*
 Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vector<vector<float> >& vocabulary){
     Hist_t hist;
     priority_queue<Compair_t,std::vector<Compair_t>,Comp> sort_pq;
@@ -130,5 +132,66 @@ Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vecto
     }
     return hist;
 }
+*/
+/*
+Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vector<vector<float> >& vocabulary){
 
+    Hist_t hist;
+
+    size_t index = 0;
+    float min_simi = std::numeric_limits<float>::max();
+
+    for(auto feature : sketch_features){
+        // 计算当前feature和每个单词的相似度 
+        for(vector<float>::size_type idx = 0; idx < vocabulary.size();++idx){
+             float simi = CalcSimilarity(vocabulary[idx],feature);
+             if(simi < min_simi){
+                min_simi = simi;
+                index = idx;
+             }
+        }
+        // 取最相似的单词的下标为当前feature的量,存入map
+        hist[index]++;
+    }
+    return hist;
+}
+*/
+
+
+// 定义各种距离公式
+
+/**
+ * @brief 计算两个特征点之间的欧式距离(公式见论文p4右下角）
+ *  q_ij = arg min || x_i - c_j ||
+ */
+float Distance(const vector<float>& lhs,const vector<float>& rhs){
+    float distance = 0.0;
+    for(vector<float>::size_type idx = 0; idx < lhs.size() ;++idx){
+        distance += (lhs[idx]-rhs[idx])*(lhs[idx]-rhs[idx]); 
+    }
+    return sqrt(distance);
+}
+
+Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vector<vector<float> >& vocabulary){
+
+    Hist_t hist;
+
+    size_t index = 0;
+    float min_simi = std::numeric_limits<float>::max();
+
+    for(auto feature : sketch_features){
+        // 计算当前feature和每个单词的相似度 
+        for(vector<float>::size_type idx = 0; idx < vocabulary.size();++idx){
+             //float simi = CalcSimilarity(vocabulary[idx],feature);
+             float simi = Distance(vocabulary[idx],feature);
+             if(simi < min_simi){
+                min_simi = simi;
+                index = idx;
+             }
+        }
+        // 取最相似的单词的下标为当前feature的量,存入map
+        hist[index]++;
+    }
+    return hist;
+}
 #endif
