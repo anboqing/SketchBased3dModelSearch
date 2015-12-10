@@ -116,6 +116,10 @@ int main(int argc, char**argv){
 
     bool stop = false;
 
+    // 这里不对，应该改成读取所有feature到内存
+    // 然后随机选择feature
+    // 不应该随机选文件，再选feature,因为随机选文件又没有去重，有些文件就没被选到
+    // 有些sketch 就没有用到聚类中，quantize的时候肯定不会有相同的feature
     while(stop==false){
          //初始化这一批样本
          std::vector<std::string> batch_vec;
