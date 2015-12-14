@@ -10,8 +10,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  * limitations under the License.
- * 
- */
+ * */
 
 
 #ifndef __QUANTIZE_H__
@@ -29,7 +28,7 @@
 using namespace std;
 
 typedef unsigned int Index_t;
-typedef std::pair<std::size_t,float> Compair_t;
+typedef std::pair<std::size_t,double> Compair_t;
 typedef std::map<std::size_t,std::size_t> Hist_t;
 
 class Comp{
@@ -51,10 +50,11 @@ float CalcLength(const vector<float>& vec){
 
 
 // 计算特征向量的模
-float CalcMapLength(std::map<size_t,float>& sparse_feature_vector){
-    float sum = 0.0;
+double CalcMapLength(std::map<size_t,float>& sparse_feature_vector){
+    double sum = 0.0;
     for(auto elem : sparse_feature_vector){
-        sum += elem.second * elem.second; 
+        double w = static_cast<double>(elem.second);
+        sum += w * w; 
     }
     return sqrt(sum);
 }
@@ -67,10 +67,9 @@ float CalcInnerProduct(const vector<float>& lhs,const vector<float>& rhs){
     return sum;
 }
 
-float CalcMapInnerProduct(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
-    float product = 0.0;
+double CalcMapInnerProduct(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
+    double product = 0.0;
     for(auto& pair : lhs){
-        // rhs.at(pair.first)
         product+= pair.second * rhs[pair.first]; 
     }
     return product;
@@ -90,14 +89,10 @@ float CalcSimilarity(const vector<float>& lhs,const vector<float>& rhs){
     return dot/(len);
 }
 
-float CalcMapSimilarity(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
-    float dot,len;
-    DLOG(INFO) << "before maplen ";
+double CalcMapSimilarity(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
+    double dot,len;
     len = CalcMapLength(lhs)*CalcMapLength(rhs);
-    DLOG(INFO) << "end maplen ";
-    DLOG(INFO) << "before mapprod ";
     dot = CalcMapInnerProduct(lhs,rhs);
-    DLOG(INFO) << "end mapprod ";
     if(len==0){
         DLOG(FATAL) << " feature vector is empty feature !" ;
     }
@@ -167,7 +162,8 @@ Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vecto
 float Distance(const vector<float>& lhs,const vector<float>& rhs){
     float distance = 0.0;
     for(vector<float>::size_type idx = 0; idx < lhs.size() ;++idx){
-        distance += (lhs[idx]-rhs[idx])*(lhs[idx]-rhs[idx]); 
+        float d = static_cast<float>(lhs[idx]) - static_cast<float>(rhs[idx]);
+        distance += d*d; 
     }
     return sqrt(distance);
 }
@@ -177,9 +173,9 @@ Hist_t QuantizeFeature(const vector<vector<float> >& sketch_features,const vecto
     Hist_t hist;
 
     size_t index = 0;
-    float min_simi = std::numeric_limits<float>::max();
 
     for(auto feature : sketch_features){
+        float min_simi = std::numeric_limits<float>::max();
         // 计算当前feature和每个单词的相似度 
         for(vector<float>::size_type idx = 0; idx < vocabulary.size();++idx){
              //float simi = CalcSimilarity(vocabulary[idx],feature);

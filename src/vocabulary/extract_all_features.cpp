@@ -62,6 +62,7 @@ int main(int argc, char**argv){
     Galif feature_extractor(*fconf);
 
     // 把每个草图的特征提取出来，并保存成特征文件(什么格式)
+    int count = 1;
     for(auto path : sketch_path_vec){
          // 从path中读取出sketch
         cv::Mat img = cv::imread(path.c_str());
@@ -71,7 +72,9 @@ int main(int argc, char**argv){
         feature_extractor.compute(img,keypoints,features);
         //存一个相应的特征文件:file_tool里面写一个函数
         WriteVec<float>(feature_data_path,path,features);
+        std::cout << "extract features " << count++ << "/" << sketch_path_vec.size() << "\r"<<std::flush;
     }
+    std::cout << "extract features "<<sketch_path_vec.size()<<"/"<<sketch_path_vec.size()<<"."<<std::endl;
 
     return 0;
 }

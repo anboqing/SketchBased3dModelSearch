@@ -121,8 +121,8 @@ int main(int argc, char**argv){
 
     static size_t count = 0;
 
+    /* 
     bool stop = false;
-    
     while(!stop){
         cv::Mat batch_features_mat; //存储当前这一批特征文件中的所有feature
         // 读一批特征文件到内存
@@ -137,7 +137,9 @@ int main(int argc, char**argv){
             }
 
             // random N ： 在这张sketch里选择N个特征加入候选集;
+            // TEST : 测试把所有特征用来聚类 
             std::size_t N = rd()%feature_mat.rows+1;
+            
             // 在当前草图这些特征里面随机选择若干个特征加入batch_features_mat;
             // random perm
             CHECK(feature_mat.rows!=0);
@@ -161,6 +163,18 @@ int main(int argc, char**argv){
         // 把这一批feature加入候选集
         all_feature_m.push_back(batch_features_mat);
     }
+    */
+    
+    for(auto feature_path : feature_path_vec){
+        cv::Mat feature_mat;
+        unsigned row,col;
+        GetSizeByName(feature_path_vec[fpathv_idx],&row,&col);
+        if(0!=LoadData2cvMat(feature_path_vec[fpathv_idx],feature_mat,row,col)){
+            LOG(FATAL) << " load data to cv mat error " ; 
+        }
+        all_feature_m.push_back(feature_mat);
+    }
+
 
     LOG(INFO) << " \ntotal feature number : " << all_feature_m.rows ;
     

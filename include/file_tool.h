@@ -36,6 +36,8 @@
 
 #include <glog/logging.h>
 
+#include "typedefs.h"
+
 /* ------------------------------------------------------------------------*/
 /**
  * @brief 保存倒排索引
@@ -69,7 +71,7 @@ void SaveIndex(const std::string& filename,
  */
 /* ------------------------------------------------------------------------*/
 void LoadIndex(const std::string& filename,
-        std::unordered_map<std::size_t,std::map<std::size_t,float> > inverse_index){
+        sbe::InverseIndex_t& inverse_index){
     std::ifstream ifs(filename);
     if(!ifs.is_open()){
         LOG(INFO) << " open index file error " ; 
