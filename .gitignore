@@ -1,5 +1,9 @@
 /data/
+/bin/
+/log/
+/debug/
 *.txt
 *.dat
 *.o
 *.*~
+.gitignore

@@ -81,7 +81,7 @@ void LoadIndex(const std::string& filename,
         std::istringstream iss(line); 
         std::size_t word_index;
         iss >> word_index;
-        std::map<std::size_t,float> inverse_list;
+        std::unordered_map<std::size_t,float> inverse_list;
         std::size_t doc_index;
         float tfidf;
         while(iss >> doc_index && iss >> tfidf){

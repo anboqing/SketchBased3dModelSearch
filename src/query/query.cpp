@@ -28,6 +28,7 @@
 #include <iostream>
 #include <memory>
 #include <set>
+#include <unordered_set>
 
 #include "config.h"
 #include "file_tool.h"
@@ -55,7 +56,7 @@ int main(int argc,char** argv){
     unordered_map<size_t,size_t> term_frequency_map; // 单词的文档频率 word_index,word_count
     vector<vector<float> > vocabulary; // 单词表
     shared_ptr<sbe::Galif> p_galif; //特征提取器
-    set<size_t> candidate_doc_set; // 包含查询词的文档index集合
+    unordered_set<size_t> candidate_doc_set; // 包含查询词的文档index集合
     //vector<Hist_t> candidate_hists; // 包含查询词的文档hist集合
     vector<string> sketch_filename_list; // 草图文件名列表
     /***********************************************************/
@@ -89,84 +90,112 @@ int main(int argc,char** argv){
     const string& vocabulary_path = pconf->_conf_map["vocabulary_path"];
     LoadData2stdVec(vocabulary_path,vocabulary);
     LOG(INFO) << "vocabulary size : "<<vocabulary.size();
-// 读取查询草图
-    cv::Mat query_img = cv::imread(argv[2]);    
-// 提取查询草图特征
-    sbe::KeyPoints_t keypoints;
-    sbe::Features_t features; //查询草图的特征
 
-    Timer timer;
 
-    timer.start();
 
-    LOG(INFO) << " computing query feature .. " ;
+    bool stop = false;
+    while(!stop){
+        cout << " (enter quit to exit) " << endl; 
+        cout << " enter a sketch path you want to retrieve : " << endl;
 
-    p_galif->compute(query_img,keypoints,features);
-// quantize查询草图生成查询histogram
-    LOG(INFO) << " quantizing query feature ... " ;
-    Hist_t query_hist = QuantizeFeature(features,vocabulary);     
+        string img_path;
+        cin >> img_path;
 
-// -在倒排索引中提取包含查询词的所有文档集合
-    LOG(INFO) << " retrieve candidate doc set .. " ;
-    size_t sum_wordcount=0; // 查询草图的单词数量
-    for(auto& wordid_wc : query_hist){
-        // 取出查询特征里的每个单词
-        size_t word_id = wordid_wc.first; 
-        sum_wordcount+=wordid_wc.second;
-        // 在倒排索引中查找当前单词的倒排列表
-        map<size_t,float>& inverse_list = inverse_index[word_id];
-        CHECK(inverse_list.size()!=0);
-        // 遍历当前倒排列表，把其中的所有文档id拿出来存入候选doc集合
-        for(auto& docid_weigth : inverse_list){
-            candidate_doc_set.insert(docid_weigth.first);
+        if(img_path.compare(string("quit")) == 0){
+            break; 
         }
+
+    // 读取查询草图
+        cv::Mat query_img = cv::imread(img_path.c_str());    
+    // 提取查询草图特征
+        sbe::KeyPoints_t keypoints;
+        sbe::Features_t features; //查询草图的特征
+
+        Timer timer;
+
+
+        LOG(INFO) << " computing query feature .. " ;
+
+        timer.start();
+        p_galif->compute(query_img,keypoints,features);
+        timer.stop();
+
+        cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
+
+    // quantize查询草图生成查询histogram
+        LOG(INFO) << " quantizing query feature ... " ;
+        timer.start();
+        Hist_t query_hist = QuantizeFeature(features,vocabulary);     
+        timer.stop();
+        cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
+
+    // -在倒排索引中提取包含查询词的所有文档集合
+        LOG(INFO) << " retrieve candidate doc set .. " ;
+        timer.start();
+        size_t sum_wordcount=0; // 查询草图的单词数量
+        for(auto& wordid_wc : query_hist){
+            // 取出查询特征里的每个单词
+            size_t word_id = wordid_wc.first; 
+            sum_wordcount+=wordid_wc.second;
+            // 在倒排索引中查找当前单词的倒排列表
+            unordered_map<size_t,float>& inverse_list = inverse_index[word_id];
+            CHECK(inverse_list.size()!=0);
+            // 遍历当前倒排列表，把其中的所有文档id拿出来存入候选doc集合
+            for(auto& docid_weigth : inverse_list){
+                candidate_doc_set.insert(docid_weigth.first);
+            }
+        }
+        timer.stop();
+        cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
+
+        LOG(INFO) << " generate query feature vector ...";
+    // -生成查询特征向量 hj=(hj/sum_hj)log(N/fj)
+        timer.start();
+        unordered_map<size_t,float> query_feature_vector;
+        size_t N = hist_tfidf.size();// 总的文档数
+        for(auto& wordid_wc : query_hist){
+            // 提取当前单词在所有文档出现的次数 
+            float term_frequency =static_cast<float>(term_frequency_map[wordid_wc.first]);
+            float word_count = static_cast<float>(wordid_wc.second);
+            float tfidf = (word_count/sum_wordcount)*log(N/(term_frequency));
+            query_feature_vector.insert(std::make_pair(wordid_wc.first,tfidf));
+        }
+        timer.stop();
+        cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
+
+    // --把候选文档集合的histogram和查询特征向量求相似度，排序，返回结果
+        LOG(INFO) << " calculate similarity with each candidate doc.. ";
+        priority_queue<Compair_t,std::vector<Compair_t>,Comp> sort_pq;
+        CHECK(candidate_doc_set.size()!=0);
+
+        timer.start();
+        for(auto doc_id : candidate_doc_set){
+             // 获取一个候选文档特征向量
+             unordered_map<size_t,float>& candidate_feature_vector = hist_tfidf[doc_id];
+             // 和查询特征向量求相似度
+             double simi = CalcMapSimilarity(query_feature_vector,candidate_feature_vector);
+             // 把docid,simi存入优先级队列进行排序
+             sort_pq.push(make_pair(doc_id,simi));
+        }
+        timer.stop();
+        cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
+
+        // 返回最相似的文档
+        size_t count = 5;
+        while(sort_pq.size()!=0 && count--){
+            auto p = sort_pq.top(); 
+            cout <<sketch_filename_list[p.first] << "\t\t" << p.second <<endl;
+            sort_pq.pop();
+        }
+
     }
-    LOG(INFO) << " generate query feature vector ...";
-// -生成查询特征向量 hj=(hj/sum_hj)log(N/fj)
-    unordered_map<size_t,float> query_feature_vector;
-    size_t N = hist_tfidf.size();// 总的文档数
-    for(auto& wordid_wc : query_hist){
-        // 提取当前单词在所有文档出现的次数 
-        float term_frequency =static_cast<float>(term_frequency_map[wordid_wc.first]);
-        float word_count = static_cast<float>(wordid_wc.second);
-        float tfidf = (word_count/sum_wordcount)*log(N/(term_frequency));
-        query_feature_vector.insert(std::make_pair(wordid_wc.first,tfidf));
-    }
 
-
-// --把候选文档集合的histogram和查询特征向量求相似度，排序，返回结果
-    LOG(INFO) << " calculate similarity with each candidate doc.. ";
-    priority_queue<Compair_t,std::vector<Compair_t>,Comp> sort_pq;
-
-    CHECK(candidate_doc_set.size()!=0);
-
-   for(auto doc_id : candidate_doc_set){
-         // 获取一个候选文档特征向量
-         unordered_map<size_t,float>& candidate_feature_vector = hist_tfidf[doc_id];
-         // 和查询特征向量求相似度
-         double simi = CalcMapSimilarity(query_feature_vector,candidate_feature_vector);
-         // 把docid,simi存入优先级队列进行排序
-         sort_pq.push(make_pair(doc_id,simi));
-    }
-    timer.stop();
-
-    cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
-
-    // 返回最相似的文档
     /*
-    while(sort_pq.size()!=0){
-        auto p = sort_pq.top(); 
-        cout <<p.first << " " << p.second <<endl;
-        sort_pq.pop();
-    }
-    */
-
-
-
     size_t res_id = sort_pq.top().first;
     cv::Mat res_img = cv::imread(sketch_filename_list[res_id]);
     cv::imshow("test",res_img);
     cv::waitKey(0);
+    */
 
     return 0;
 }

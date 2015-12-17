@@ -57,7 +57,7 @@ typedef boost::property_tree::ptree PropertyTree_t;
 // 直方图结构
 typedef std::map<std::size_t,std::size_t> Hist_t;
 // 倒排索引结构
-typedef std::unordered_map<std::size_t,std::map<std::size_t,float> > InverseIndex_t;
+typedef std::unordered_map<std::size_t,std::unordered_map<std::size_t,float> > InverseIndex_t;
 
 } //namespace sbe
 
