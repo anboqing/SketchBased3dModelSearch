@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vocabulary>
-    <totoal_sample_num>70000</totoal_sample_num>
-    <centroids_num>100</centroids_num>
+    <totoal_sample_num>1000000</totoal_sample_num>
+    <centroids_num>1000</centroids_num>
     <vocabulary_data_path>/home/anboqing/Code/sbe/data/vocabulary.dat</vocabulary_data_path>
-        <batch_num>102</batch_num>
-        <max_iter>1000</max_iter>
-        <accuracy_threshold>0.01</accuracy_threshold></vocabulary>
+    <batch_num>102</batch_num>
+    <max_iter>100</max_iter>
+    <accuracy_threshold>0.01</accuracy_threshold>
+</vocabulary>

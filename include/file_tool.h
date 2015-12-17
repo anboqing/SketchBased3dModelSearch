@@ -119,7 +119,7 @@ void SaveTFC(const std::string& filename,std::map<std::size_t,std::size_t>& term
  * @Param term_frequency_counter
  */
 /* ------------------------------------------------------------------------*/
-void LoadTFC(const std::string& filename,std::map<std::size_t,std::size_t>& term_frequency_counter){
+void LoadTFC(const std::string& filename,std::unordered_map<std::size_t,std::size_t>& term_frequency_counter){
     std::ifstream ifs(filename);
     if(!ifs.is_open()){
         LOG(FATAL) << "open file error " ;
@@ -190,6 +190,33 @@ int GetFileListInPath(const std::string& path,std::vector<std::string>& name_vec
             for(; iter!=end; ++iter) {
                 if(FS::is_regular_file(iter->status())) {
                     name_vec.push_back(iter->path().string());
+                }
+            }
+        }
+        std::sort(name_vec.begin(),name_vec.end());
+    }else{
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+
+int GetFileListByExtension(const std::string& path,std::vector<std::string>& name_vec,const std::string& extension){
+    namespace FS = boost::filesystem;
+    FS::path p(path);
+    if(FS::exists(p)) {
+        //如果是文件，就把文件名加入vec
+        if(FS::is_regular_file(p)) {
+            if(p.string().compare(extension) == 0)
+                name_vec.push_back(p.string());
+        } else if(FS::is_directory(p)) {
+            //如果是文件夹，就遍历之
+            FS::recursive_directory_iterator iter(p),end;
+            for(; iter!=end; ++iter) {
+                if(FS::is_regular_file(iter->status()) ) {
+                    std::string str = (iter->path()).extension().string();
+                    if(str.compare(extension) == 0 )
+                        name_vec.push_back(iter->path().string());
                 }
             }
         }
@@ -447,6 +474,25 @@ int SaveHist(const std::vector<std::map<KEY_T,VALUE_T> >& data,const std::string
     return 0;
 }
 
+
+template <typename KEY_T,typename VALUE_T>
+int SaveSingleHist(const std::map<KEY_T,VALUE_T>& data,const std::string& filename){
+    
+    std::ofstream ofs(filename);
+    if(!ofs.is_open()){
+        LOG(FATAL)<< "file open error";
+    }
+
+    for(auto pair: data){
+        ofs << pair.first << " " << pair.second << " "; 
+        ofs << std::endl;
+    }
+    
+    ofs.close();
+    return 0;
+}
+
+
 /* ------------------------------------------------------------------------*/
 /**
  * @brief 把存起来的直方图读取到内存中
@@ -466,6 +512,29 @@ int LoadHist(std::vector<std::map<KEY_T,VALUE_T> >& data,const std::string& file
     while(getline(ifs,line)){
         std::istringstream iss(line);        
         std::map<KEY_T,VALUE_T> hist;
+        KEY_T doc_id;
+        VALUE_T frequency;
+        while(iss >> doc_id && iss >> frequency){
+            hist[doc_id] = frequency; 
+        }
+        data.push_back(hist);
+    }
+
+    ifs.close();
+    return 0;
+}
+
+template <typename KEY_T,typename VALUE_T>
+int LoadFastHist(std::vector<std::unordered_map<KEY_T,VALUE_T> >& data,const std::string& filename){
+    std::ifstream ifs(filename);
+    if(!ifs.is_open()){
+        LOG(FATAL)<< "file open error";
+    }
+
+    std::string line;
+    while(getline(ifs,line)){
+        std::istringstream iss(line);        
+        std::unordered_map<KEY_T,VALUE_T> hist;
         KEY_T doc_id;
         VALUE_T frequency;
         while(iss >> doc_id && iss >> frequency){

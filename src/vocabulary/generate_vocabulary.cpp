@@ -121,7 +121,6 @@ int main(int argc, char**argv){
 
     static size_t count = 0;
 
-    /* 
     bool stop = false;
     while(!stop){
         cv::Mat batch_features_mat; //存储当前这一批特征文件中的所有feature
@@ -155,6 +154,9 @@ int main(int argc, char**argv){
             }
             CHECK(batch_features_mat.rows - before == N);
             sample_feature_count += N;
+
+            std::cout << " sampling features .. " << sample_feature_count << "/" << TOTAL_SAMPLE << "\r" << std::flush;
+
             if(sample_feature_count >= TOTAL_SAMPLE ){
                 stop = true;
                 break; 
@@ -163,8 +165,8 @@ int main(int argc, char**argv){
         // 把这一批feature加入候选集
         all_feature_m.push_back(batch_features_mat);
     }
-    */
     
+    /* 
     for(auto feature_path : feature_path_vec){
         cv::Mat feature_mat;
         unsigned row,col;
@@ -174,9 +176,9 @@ int main(int argc, char**argv){
         }
         all_feature_m.push_back(feature_mat);
     }
+    */
 
-
-    LOG(INFO) << " \ntotal feature number : " << all_feature_m.rows ;
+    std::cout << " sampling features .. " << sample_feature_count << "/" << TOTAL_SAMPLE << std::endl;
     
     // 聚类出的聚类中心保存起来形成　vocabulary
     cv::Mat centers,labels;

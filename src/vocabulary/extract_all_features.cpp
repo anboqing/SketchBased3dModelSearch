@@ -37,11 +37,15 @@ using namespace sbe;
 
 int main(int argc, char**argv){
 
+    
+
     if(argc<2){
         std::cout << "Usage : ./" << std::string(argv[0] );
         std::cout << "  path/to/path.conf";
         std::cout<< std::endl; 
     }
+
+    google::InitGoogleLogging(argv[0]);
 
     std::vector<std::string> sketch_path_vec; // 存储所有草图的路径
 
@@ -50,6 +54,9 @@ int main(int argc, char**argv){
     std::string& sketch_path = pconf->_conf_map["sketch_path"];
     std::string& feature_conf_path = pconf->_conf_map["feature_conf_path"];
     std::string& feature_data_path = pconf->_conf_map["feature_data_path"];
+
+    const std::string& log_dir = pconf->_conf_map["log_dir"];
+    FLAGS_log_dir = log_dir;
 
     // 先获取所有草图的文件名
     if(GetFileListInPath(sketch_path,sketch_path_vec)){

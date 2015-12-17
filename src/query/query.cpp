@@ -34,6 +34,7 @@
 #include "typedefs.h"
 #include "galif.h"
 #include "quantize.h"
+#include "Timer.h"
 
 using namespace std;
 using namespace sbe;
@@ -50,8 +51,8 @@ int main(int argc,char** argv){
 
     /***********************************************************/
     InverseIndex_t inverse_index; // 倒排索引
-    vector<map<size_t,float> > hist_tfidf; // 文档向量表
-    map<size_t,size_t> term_frequency_map; // 单词的文档频率 word_index,word_count
+    vector<unordered_map<size_t,float> > hist_tfidf; // 文档向量表
+    unordered_map<size_t,size_t> term_frequency_map; // 单词的文档频率 word_index,word_count
     vector<vector<float> > vocabulary; // 单词表
     shared_ptr<sbe::Galif> p_galif; //特征提取器
     set<size_t> candidate_doc_set; // 包含查询词的文档index集合
@@ -78,7 +79,7 @@ int main(int argc,char** argv){
     LOG(INFO) << " inverse index size : " << inverse_index.size() ;
 // 读取每篇文档的直方图
     const std::string& hist_path_tfidf = pconf->_conf_map["hist_path_tfidf"];
-    LoadHist<std::size_t,float>(hist_tfidf,hist_path_tfidf);
+    LoadFastHist<std::size_t,float>(hist_tfidf,hist_path_tfidf);
     LOG(INFO) << " histogram size: " << hist_tfidf.size();
 // 读取每个单词的term_frequency
     const std::string& tfc_path = pconf->_conf_map["tfc_path"];
@@ -93,7 +94,11 @@ int main(int argc,char** argv){
 // 提取查询草图特征
     sbe::KeyPoints_t keypoints;
     sbe::Features_t features; //查询草图的特征
-    
+
+    Timer timer;
+
+    timer.start();
+
     LOG(INFO) << " computing query feature .. " ;
 
     p_galif->compute(query_img,keypoints,features);
@@ -118,7 +123,7 @@ int main(int argc,char** argv){
     }
     LOG(INFO) << " generate query feature vector ...";
 // -生成查询特征向量 hj=(hj/sum_hj)log(N/fj)
-    map<size_t,float> query_feature_vector;
+    unordered_map<size_t,float> query_feature_vector;
     size_t N = hist_tfidf.size();// 总的文档数
     for(auto& wordid_wc : query_hist){
         // 提取当前单词在所有文档出现的次数 
@@ -135,14 +140,17 @@ int main(int argc,char** argv){
 
     CHECK(candidate_doc_set.size()!=0);
 
-    for(auto doc_id : candidate_doc_set){
+   for(auto doc_id : candidate_doc_set){
          // 获取一个候选文档特征向量
-         map<size_t,float>& candidate_feature_vector = hist_tfidf[doc_id];
+         unordered_map<size_t,float>& candidate_feature_vector = hist_tfidf[doc_id];
          // 和查询特征向量求相似度
          double simi = CalcMapSimilarity(query_feature_vector,candidate_feature_vector);
          // 把docid,simi存入优先级队列进行排序
          sort_pq.push(make_pair(doc_id,simi));
     }
+    timer.stop();
+
+    cout << "elapsed time : "<< timer.getElapsedTimeInMilliSec() << "ms.\n";
 
     // 返回最相似的文档
     /*

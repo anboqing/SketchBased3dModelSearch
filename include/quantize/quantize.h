@@ -7,9 +7,7 @@
  *                                        
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an AS IS BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- * limitations under the License.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *  See the License for the specific language governing permissions and * limitations under the License.
  * */
 
 
@@ -22,6 +20,7 @@
 #include <glog/logging.h>
 #include <math.h>
 #include <limits>
+#include <unordered_map>
 
 #include "typedefs.h"
 
@@ -49,16 +48,6 @@ float CalcLength(const vector<float>& vec){
 }
 
 
-// 计算特征向量的模
-double CalcMapLength(std::map<size_t,float>& sparse_feature_vector){
-    double sum = 0.0;
-    for(auto elem : sparse_feature_vector){
-        double w = static_cast<double>(elem.second);
-        sum += w * w; 
-    }
-    return sqrt(sum);
-}
-
 float CalcInnerProduct(const vector<float>& lhs,const vector<float>& rhs){
     float sum  = 0.0;
     for(vector<float>::size_type ix = 0;ix < lhs.size() ;++ix){
@@ -67,13 +56,6 @@ float CalcInnerProduct(const vector<float>& lhs,const vector<float>& rhs){
     return sum;
 }
 
-double CalcMapInnerProduct(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
-    double product = 0.0;
-    for(auto& pair : lhs){
-        product+= pair.second * rhs[pair.first]; 
-    }
-    return product;
-}
 /* ------------------------------------------------------------------------*/
 /**
  * @brief 计算两个向量的相似度（余弦夹角）
@@ -89,7 +71,39 @@ float CalcSimilarity(const vector<float>& lhs,const vector<float>& rhs){
     return dot/(len);
 }
 
-double CalcMapSimilarity(std::map<size_t,float>& lhs,std::map<size_t,float>& rhs){
+
+
+double CalcMapInnerProduct(std::unordered_map<size_t,float>& lhs,std::unordered_map<size_t,float>& rhs){
+    double product = 0.0;
+    if(lhs.size() < rhs.size()){
+        for(auto& pair : lhs){
+            float val;
+            if((val = rhs[pair.first]) != 0)
+                product+= pair.second * val; 
+        }
+    }
+    else{
+        for(auto& pair : rhs){
+            float val;
+            if((val = lhs[pair.first]) != 0)
+                product+= pair.second * val;
+        } 
+    }
+    return product;
+}
+
+// 计算特征向量的模
+double CalcMapLength(std::unordered_map<size_t,float>& sparse_feature_vector){
+    double sum = 0.0;
+    for(auto elem : sparse_feature_vector){
+        double w = static_cast<double>(elem.second);
+        sum += w * w; 
+    }
+    return sqrt(sum);
+}
+
+
+double CalcMapSimilarity(std::unordered_map<size_t,float>& lhs,std::unordered_map<size_t,float>& rhs){
     double dot,len;
     len = CalcMapLength(lhs)*CalcMapLength(rhs);
     dot = CalcMapInnerProduct(lhs,rhs);

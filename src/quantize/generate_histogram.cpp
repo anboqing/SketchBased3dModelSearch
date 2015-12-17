@@ -38,6 +38,8 @@
 #include <map>
 #include <queue>
 
+#include <boost/filesystem.hpp>
+
 using namespace std;
 
 typedef std::map<std::size_t,std::size_t> Hist_t; // 直方图
@@ -50,14 +52,15 @@ int main(int argc, char** argv){
     }
 
     google::InitGoogleLogging(argv[0]);
-    google::LogToStderr();
 
     std::vector<std::vector<float> > vocabulary; // 单词表
-    vector<Hist_t> all_hist; // 所有直方图
+    vector<Hist_t> all_hist; // 所有直方图 (由于内存不足装下全部hist，所以分批读)
 
     // 准备配置文件
     std::shared_ptr<PathConfig> pconf = PathConfig::GetInstance();
     pconf->load(argv[1]);
+
+    FLAGS_log_dir = pconf->_conf_map["log_dir"];
 
     const string& vocabulary_path = pconf->_conf_map["vocabulary_path"]; 
     const string& hist_path = pconf->_conf_map["hist_path"];
@@ -77,16 +80,30 @@ int main(int argc, char** argv){
     DLOG(INFO) << "所有sketch数量 " << feature_names.size() ;
 
     // 对每个特征文件
+    size_t total = feature_names.size();
+    size_t count = 1;
     for(auto feature_name : feature_names){
+        std::cout << " quantize .. " << count++ <<"/"<< total<< "\r"<< std::flush;
         // 读取特征文件
         vector<vector<float> > features;
         LoadData2stdVec(feature_name,features);
-
         // 每个feature 和单词表里所有 单词计算相似度 存入优先级队列
         Hist_t hist = QuantizeFeature(features,vocabulary);
+
+        /*
+        boost::filesystem::path p(feature_name);
+
+        boost::filesystem::path final_path = p.parent_path()/(p.stem().string()+".hist");
+
+        std::cout << final_path.string() << "\r"<<std::flush;
+
+        SaveHist<std::size_t,std::size_t>(hist,final_path.string());
+        */
+
         all_hist.push_back(hist);
     }
-    
+    std::cout << " quantize .. " << count <<"/"<<"\r"<< total<<std::endl;
+
     SaveHist<std::size_t,std::size_t>(all_hist,hist_path);
 
     return 0;
