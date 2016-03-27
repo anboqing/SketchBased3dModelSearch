@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <settings>
-    <model_dir>../data/12/Extended</model_dir>
-    <view_dir>../data/view</view_dir>
-    <output_dir>../data/12/Extended/sketch</output_dir>
-    <view_num>102</view_num>
+    	<model_dir>../data/13/debug</model_dir>
+    	<view_dir>../data/view</view_dir>
+    	<output_dir>../data/13/debug/proj</output_dir>
+    	<view_num>102</view_num>
+    	<isDrawBoundaries>false</isDrawBoundaries>
+	<isDrawOccludingContours>true</isDrawOccludingContours>
+	<isDrawSuggestiveContours>true</isDrawSuggestiveContours>
+	<isDrawApprentRidges>true</isDrawApprentRidges>
+	<isDrawRidges>true</isDrawRidges>
+	<isDrawValleys>true</isDrawValleys>
+	<resize_height>256</resize_height>
+	<resize_width>256</resize_width>
 </settings>

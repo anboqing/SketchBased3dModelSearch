@@ -2,6 +2,7 @@
 /bin/
 /log/
 /debug/
+/lib/
 *.txt
 *.dat
 *.o

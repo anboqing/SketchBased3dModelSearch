@@ -169,6 +169,39 @@ bool GetMetaByName(const std::string& name,
 
 /* ------------------------------------------------------------------------*/
 /**
+ * @brief 从模型文件路径名 提取模型文件名
+ *
+ * @Param name
+ * @Param model_name
+ *
+ * @Returns   
+ */
+/* ------------------------------------------------------------------------*/
+bool GetModelName(const std::string& name,
+        std::string& model_name){
+    namespace FS = boost::filesystem;
+    FS::path p(name);
+    if(FS::exists(p)){
+        model_name = p.stem().string();
+        return true;
+    }else{return false;}
+}
+
+bool GetSketchModelName(const std::string& sketch_path,
+        std::string& model_name){
+    namespace FS = boost::filesystem;
+    FS::path p(sketch_path);
+    if(FS::exists(p)){
+        std::string parent_path = p.parent_path().string();
+        model_name = parent_path.substr(parent_path.rfind("/")+1,parent_path.length()-1);
+        return true;
+    }
+    else
+        return false;
+}
+
+/* ------------------------------------------------------------------------*/
+/**
  * @brief : read all file names recursively from given `path` into `name_vec`
  *
  * @Param path : path that you want to search
@@ -199,6 +232,7 @@ int GetFileListInPath(const std::string& path,std::vector<std::string>& name_vec
     }
     return EXIT_SUCCESS;
 }
+
 
 
 int GetFileListByExtension(const std::string& path,std::vector<std::string>& name_vec,const std::string& extension){
