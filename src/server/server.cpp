@@ -30,6 +30,7 @@
 #include <glog/logging.h> // logging util 
 
 #include "io_util.h"
+#include "ThreadPool.h"
 
 #include <vector>
 
@@ -37,6 +38,7 @@ const int BUFSIZE = 1024*10;
 
 DEFINE_int32(listen_port,9999,"Port to be listened");
 DEFINE_int32(backlog,1024,"The size of listen queue");
+DEFINE_int32(pool_size,10,"threads num of the thread pool ");
 
 void sigact(int fd){
     close(fd);
@@ -46,7 +48,7 @@ void sig_child(int signo){
     pid_t pid;
     int stat = 0;
     pid = wait(&stat);
-    LOG(INFO) << "child " << pid << " terminated";
+    LOG(INFO) << "child " << pid << " terminated with " << signo;
     return;
 }
 
@@ -58,7 +60,8 @@ int setnonblocking(int sockfd){
     return 0;
 }
 
-void do_use_conn(int);
+
+void do_use_conn(int,ThreadPoolManager&);
 
 int main(int argc,char **argv){
 
@@ -94,9 +97,17 @@ int main(int argc,char **argv){
         return -1;
     }
 
+    
     signal(SIGINT,sigact);
     signal(SIGCHLD,sig_child);
     signal(SIGPIPE,SIG_IGN);
+
+    // Thread pool
+    ThreadPoolManager pool_manager(FLAGS_pool_size);
+    // 启动线程池
+    pool_manager.start();
+
+    LOG(INFO) << "ThreadPoolManager is running";
 
     int connfd;
     struct sockaddr_in client_addr;
@@ -137,14 +148,14 @@ int main(int argc,char **argv){
                 }
                 // set the connected client fd as non-blocking and add it to epoll watch list
                 setnonblocking(connfd); // if use block connfd, server will block on recive 
-                ev.events = EPOLLIN | EPOLLET; // 将触发方式设置为水平触发
+                ev.events = EPOLLIN | EPOLLET; // 将触发方式设置为边缘触发
                 ev.data.fd = connfd;
                 if( epoll_ctl(epollfd,EPOLL_CTL_ADD,connfd,&ev) == -1){
                     LOG(ERROR) << "epoll_ctl:connfd " << strerror(errno);
                     exit(EXIT_FAILURE);
                 }
             } else{ 
-                do_use_conn(events[idx].data.fd);
+                do_use_conn(events[idx].data.fd,pool_manager);
             }
         }
         /*
@@ -154,16 +165,21 @@ int main(int argc,char **argv){
            do_use_conn(connfd);
            }
            close(connfd); // parent close connected socket;
-           */
+       */
     } // end for(;;)
     shutdown(listenfd,SHUT_RDWR);
 }
 
-void do_use_conn(int connfd){
+void do_use_conn(int connfd,ThreadPoolManager& pool_manager){
     char buf[BUFSIZE];
     memset(buf,0,BUFSIZE);
     // just send back whatever client send in
     Recive(connfd,(void*)buf,BUFSIZE,0);
+    Task t;
+    t.sockfd_ = connfd;
+    t.data_size_ = 1024;
+    t.data_ = std::string(buf);
+    pool_manager.add_task(t);
     Send(connfd,(void*)buf,strlen(buf),0) ;
 }
 

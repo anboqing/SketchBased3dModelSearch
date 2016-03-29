@@ -33,7 +33,7 @@
 
 #include "io_util.h"
 
-const int BUFSIZE = 1024*10;
+const int BUFSIZE = 1024;
 
 DEFINE_string(server_ip,"127.0.0.1","IP address of server eg. 127.0.0.1");
 DEFINE_int32(server_port,9999,"Port number of server application eg. 80");
@@ -74,7 +74,7 @@ int main(int argc,char **argv){
     for(int i=0;i<10;i++){
         memset((void*)buf,96,BUFSIZE);
         // send message in buf to server
-        DLOG(INFO) << " sending message : " << buf;
+        DLOG(INFO) << " sending message : " << strlen(buf) << " bytes";
         ssize_t ret;
         if( (ret = Send(sockfd,(void*)buf,strlen(buf),0)) < 0) {
             LOG(ERROR) <<"send error" << strerror(errno);
