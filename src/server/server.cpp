@@ -31,6 +31,7 @@
 
 #include "io_util.h"
 #include "ThreadPool.h"
+#include "DataMap.h"
 
 #include <vector>
 
@@ -102,6 +103,9 @@ int main(int argc,char **argv){
     signal(SIGCHLD,sig_child);
     signal(SIGPIPE,SIG_IGN);
 
+    // 准备hash_map
+    DataMap* p_datamap = DataMap::getInstance();
+    
     // Thread pool
     ThreadPoolManager pool_manager(FLAGS_pool_size);
     // 启动线程池
@@ -154,8 +158,34 @@ int main(int argc,char **argv){
                     LOG(ERROR) << "epoll_ctl:connfd " << strerror(errno);
                     exit(EXIT_FAILURE);
                 }
-            } else{ 
-                do_use_conn(events[idx].data.fd,pool_manager);
+            } else if (events[idx].events & EPOLLIN ){ 
+
+                char buf[BUFSIZE];
+                memset(buf,0,BUFSIZE);
+                Recive(events[idx].data.fd,(void*)buf,BUFSIZE,0);
+                // 把获取到的数据存入hash_table对应fd的位置
+                std::string data(buf);
+    
+                DLOG(INFO) << " server recv data : " << data;
+
+                p_datamap->setData(events[idx].data.fd,data);
+                // 把任务交给线程池取进行计算，线程池也从hash_table取数据，
+                // 计算完再把结果存入hash_table;
+                Task t(connfd,epollfd);
+                pool_manager.add_task(t);
+
+            } else if (events[idx].events & EPOLLOUT){
+                //　获取发生事件的fd,
+                // 从hash_table里获取数据
+                std::string data = p_datamap->getData(events[idx].data.fd);
+                // 发送
+                DLOG(INFO) << " server send data : " << data;
+                Send(events[idx].data.fd,(void*)data.c_str(),data.size(),0) ;
+                /*
+                ev.events = EPOLLIN | EPOLLET;
+                ev.data.fd = events[idx].data.fd;
+                epoll_ctl(events[idx].data.fd,EPOLL_CTL_MOD,events[idx].data.fd,&ev);
+                */
             }
         }
         /*
@@ -170,16 +200,4 @@ int main(int argc,char **argv){
     shutdown(listenfd,SHUT_RDWR);
 }
 
-void do_use_conn(int connfd,ThreadPoolManager& pool_manager){
-    char buf[BUFSIZE];
-    memset(buf,0,BUFSIZE);
-    // just send back whatever client send in
-    Recive(connfd,(void*)buf,BUFSIZE,0);
-    Task t;
-    t.sockfd_ = connfd;
-    t.data_size_ = 1024;
-    t.data_ = std::string(buf);
-    pool_manager.add_task(t);
-    Send(connfd,(void*)buf,strlen(buf),0) ;
-}
 

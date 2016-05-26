@@ -14,22 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 **************************************************************************/
-/*************************************************************************
- * Copyright (c) 2014 Zhang Dongdong
- * All rights reserved.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-**************************************************************************/
+
 #ifndef TRIMESHVIEW_H
 #define TRIMESHVIEW_H
 
@@ -226,7 +211,7 @@ public:
     //draw_lines
     bool isDrawBoundaries;
 
-    bool isDrawSilhouette;//外部轮廓
+    bool isDrawSilhouette;//\CD獠縗C2\D6\C0\AA
     bool isDrawOccludingContours;
     bool isDrawSuggestiveContours;
 
@@ -254,7 +239,7 @@ public:
 
     void readFeatureLines(const QString &fileName);
 private:
-    FeatureLines fLines;//只读
+    FeatureLines fLines;//只\B6\C1
 
     FeatureLines rv_fLines;
 
@@ -270,7 +255,7 @@ private:
 
     xform xf;
     GLCamera camera;
-    point viewpos;//当前视点位置
+    point viewpos;//\B5\B1前\CA拥\E3位\D6\C3
 
     vec currcolor;// Current line color
     float currsmooth;

@@ -71,25 +71,21 @@ int main(int argc,char **argv){
     // send/read message message
     //char *buf = (char*)malloc(sizeof(BUFSIZE+1));
     char buf[BUFSIZE+1] = {0};
-    for(int i=0;i<10;i++){
-        memset((void*)buf,96,BUFSIZE);
-        // send message in buf to server
-        DLOG(INFO) << " sending message : " << strlen(buf) << " bytes";
-        ssize_t ret;
-        if( (ret = Send(sockfd,(void*)buf,strlen(buf),0)) < 0) {
-            LOG(ERROR) <<"send error" << strerror(errno);
-            break;
-        }
-
-        DLOG(INFO) << " waiting server reply...";
-        // recive message from server
-        memset((void*)buf,0,BUFSIZE+1);
-        if( (ret = Recive(sockfd,(void*)buf,BUFSIZE,0)) < 0 ){
-            LOG(ERROR)<<"revive message error" << strerror(errno);
-            break;
-        }
-        printf(" server reply: %ld bytes \n",strlen(buf));
+    memset((void*)buf,96,BUFSIZE);
+    // send message in buf to server
+    DLOG(INFO) << " sending message : " << strlen(buf) << " bytes";
+    ssize_t ret;
+    if( (ret = Send(sockfd,(void*)buf,strlen(buf),0)) < 0) {
+        LOG(ERROR) <<"send error" << strerror(errno);
     }
+
+    DLOG(INFO) << " waiting server reply...";
+    // recive message from server
+    memset((void*)buf,0,BUFSIZE+1);
+    if( (ret = Recive(sockfd,(void*)buf,BUFSIZE,0)) < 0 ){
+        LOG(ERROR)<<"revive message error" << strerror(errno);
+    }
+    printf(" server reply: %ld bytes \n",strlen(buf));
     close(sockfd);
 }
 

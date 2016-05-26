@@ -1,0 +1,87 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BUFSIZE	server.cpp	/^const int BUFSIZE = 1024*10;$/;"	v
+BUFSIZE	test_client.cpp	/^const int BUFSIZE = 1024;$/;"	v
+CONDITION_H_	Condition.h	20;"	d
+Condition	Condition.cpp	/^Condition::Condition(MutexLock *p_lock) :$/;"	f	class:Condition
+Condition	Condition.h	/^class Condition{$/;"	c
+DataMap	DataMap.h	/^    DataMap():data_map_(){}$/;"	f	class:DataMap
+DataMap	DataMap.h	/^class DataMap{$/;"	c
+LockGuarde	Mutex.h	/^	LockGuarde(MutexLock &l):lock_(l){$/;"	f	class:LockGuarde
+LockGuarde	Mutex.h	/^class LockGuarde {$/;"	c
+MUTEXLOCK_H_	Mutex.h	20;"	d
+MutexLock	Mutex.cpp	/^MutexLock::MutexLock() {$/;"	f	class:MutexLock
+MutexLock	Mutex.h	/^class MutexLock {$/;"	c
+Recive	io_util.h	/^int Recive(int sockfd,void *buf,size_t len,int flags){$/;"	f
+Send	io_util.h	/^int Send(int fd,void* buf,size_t len,int flags){$/;"	f
+Task	Task.h	/^    Task():sockfd_(5),epollfd_(4){}$/;"	f	class:Task
+Task	Task.h	/^    Task(int fd,int epollfd):sockfd_(fd),epollfd_(epollfd){}$/;"	f	class:Task
+Task	Task.h	/^class Task{$/;"	c
+Thread	Thread.cpp	/^Thread::Thread():tid_(pthread_self()){$/;"	f	class:Thread
+Thread	Thread.h	/^class Thread{$/;"	c
+ThreadPoolManager	ThreadPool.h	/^class ThreadPoolManager{$/;"	c
+ThreadPoolManager	ThreadPoolManager.cpp	/^ThreadPoolManager::ThreadPoolManager(const size_t size):$/;"	f	class:ThreadPoolManager
+WorkThread	WorkThread.h	/^class WorkThread : public Thread {$/;"	c
+_DATAMAP_H_	DataMap.h	20;"	d
+_IO_UTIL_H_	io_util.h	20;"	d
+_TASK_H_	Task.h	20;"	d
+_THREADPOOL_H_	ThreadPool.h	20;"	d
+_THREAD_H_	Thread.h	20;"	d
+_WORKTHREAD_H_	WorkThread.h	20;"	d
+_cond	Condition.h	/^	pthread_cond_t _cond;$/;"	m	class:Condition
+_mutex	Mutex.h	/^	pthread_mutex_t _mutex;$/;"	m	class:MutexLock
+_p_lock	Condition.h	/^	MutexLock *_p_lock;  \/\/这里的lock要用指针$/;"	m	class:Condition
+add_task	ThreadPoolManager.cpp	/^void ThreadPoolManager::add_task(const Task& t){$/;"	f	class:ThreadPoolManager
+cond_lock_	ThreadPool.h	/^    MutexLock cond_lock_;$/;"	m	class:ThreadPoolManager
+cond_var_	ThreadPool.h	/^    Condition cond_var_; \/\/ 条件变量$/;"	m	class:ThreadPoolManager
+data_map_	DataMap.h	/^    std::unordered_map<int,std::string> data_map_;$/;"	m	class:DataMap
+epollfd_	Task.h	/^    int epollfd_;$/;"	m	class:Task
+exit	Thread.cpp	/^void Thread::exit(){$/;"	f	class:Thread
+getData	DataMap.cpp	/^std::string DataMap::getData(int fd){$/;"	f	class:DataMap
+getInstance	DataMap.cpp	/^DataMap* DataMap::getInstance(){$/;"	f	class:DataMap
+get_task	ThreadPoolManager.cpp	/^void ThreadPoolManager::get_task(Task *t){$/;"	f	class:ThreadPoolManager
+get_tid	Thread.h	/^    pthread_t get_tid()const {$/;"	f	class:Thread
+instance_	DataMap.cpp	/^DataMap* DataMap::instance_ = NULL;$/;"	m	class:DataMap	file:
+instance_	DataMap.h	/^    static DataMap *instance_;$/;"	m	class:DataMap
+join	Thread.cpp	/^void Thread::join(pthread_t tid){$/;"	f	class:Thread
+lock	Mutex.cpp	/^void MutexLock::lock() {$/;"	f	class:MutexLock
+lock_	DataMap.cpp	/^MutexLock DataMap::lock_;$/;"	m	class:DataMap	file:
+lock_	DataMap.h	/^    static MutexLock lock_;$/;"	m	class:DataMap
+lock_	Mutex.h	/^	MutexLock &lock_;$/;"	m	class:LockGuarde
+main	server.cpp	/^int main(int argc,char **argv){$/;"	f
+main	test_client.cpp	/^int main(int argc,char **argv){$/;"	f
+mutex_	ThreadPool.h	/^    MutexLock mutex_;      \/\/ 临界区互斥锁$/;"	m	class:ThreadPoolManager
+notify	Condition.cpp	/^void Condition::notify(){$/;"	f	class:Condition
+notify_all	Condition.cpp	/^void Condition::notify_all()$/;"	f	class:Condition
+operator =	Task.h	/^    Task& operator=(const Task& t){$/;"	f	class:Task
+operator =	ThreadPool.h	/^    ThreadPoolManager& operator=(const ThreadPoolManager&){return *this;}$/;"	f	class:ThreadPoolManager
+pool_is_open_	ThreadPool.h	/^    bool pool_is_open_;$/;"	m	class:ThreadPoolManager
+pool_size_	ThreadPool.h	/^    size_t pool_size_;$/;"	m	class:ThreadPoolManager
+process_task	WorkThread.cpp	/^void process_task(Task& t){$/;"	f
+reg_pool	WorkThread.h	/^inline void WorkThread::reg_pool(const ThreadPoolManager* p_pool){$/;"	f	class:WorkThread
+setData	DataMap.cpp	/^void DataMap::setData(int fd,const std::string& data){$/;"	f	class:DataMap
+setnonblocking	server.cpp	/^int setnonblocking(int sockfd){$/;"	f
+sig_child	server.cpp	/^void sig_child(int signo){$/;"	f
+sigact	server.cpp	/^void sigact(int fd){$/;"	f
+sockfd_	Task.h	/^    int sockfd_;$/;"	m	class:Task
+start	Thread.cpp	/^void Thread::start(){$/;"	f	class:Thread
+start	ThreadPoolManager.cpp	/^void ThreadPoolManager::start(){$/;"	f	class:ThreadPoolManager
+stop	ThreadPoolManager.cpp	/^void ThreadPoolManager::stop(){$/;"	f	class:ThreadPoolManager
+task_queue_	ThreadPool.h	/^    std::queue<Task> task_queue_;               \/\/ 任务队列$/;"	m	class:ThreadPoolManager
+thread_func	Thread.cpp	/^void* Thread::thread_func(void *arg){$/;"	f	class:Thread
+thread_manager_	WorkThread.h	/^    ThreadPoolManager* thread_manager_; \/\/ 管理本线程的线程池对象$/;"	m	class:WorkThread
+tid_	Thread.h	/^    pthread_t tid_;$/;"	m	class:Thread
+unlock	Mutex.cpp	/^void MutexLock::unlock() {$/;"	f	class:MutexLock
+wait	Condition.cpp	/^void Condition::wait() {$/;"	f	class:Condition
+work_thread_vector_	ThreadPool.h	/^    std::vector<WorkThread> work_thread_vector_; \/\/ 工作线程们$/;"	m	class:ThreadPoolManager
+working	WorkThread.cpp	/^void WorkThread::working(){$/;"	f	class:WorkThread
+~Condition	Condition.cpp	/^Condition::~Condition() {$/;"	f	class:Condition
+~DataMap	DataMap.h	/^    ~DataMap(){delete instance_;}$/;"	f	class:DataMap
+~LockGuarde	Mutex.h	/^	~LockGuarde(){$/;"	f	class:LockGuarde
+~MutexLock	Mutex.cpp	/^MutexLock::~MutexLock() {$/;"	f	class:MutexLock
+~Thread	Thread.cpp	/^Thread::~Thread(){$/;"	f	class:Thread
+~ThreadPoolManager	ThreadPoolManager.cpp	/^ThreadPoolManager::~ThreadPoolManager(){$/;"	f	class:ThreadPoolManager

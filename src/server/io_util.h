@@ -43,10 +43,8 @@ again:
             return -1;
         }
     }
-    DLOG(INFO) << " HEAD : " << temp ;
     while(bytes_left >0){
         bytes_send = send(fd,ptr,bytes_left,flags);
-        DLOG(INFO) <<"send out " << bytes_send << " bytes .. ";
         if(bytes_send < 0){
             if(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK){ // a signal occured before any data was transmitted;
                 continue;
@@ -70,8 +68,6 @@ int Recive(int sockfd,void *buf,size_t len,int flags){
     char num[5];
     recv(sockfd,num,5,flags);
     bytes_left = atoi(num);
-    DLOG(INFO) << "RECV HEAD : " << bytes_left ;
-
     while( bytes_left > 0 ){
         bytes_recv = recv(sockfd,ptr,bytes_left,flags);
         if(bytes_recv < 0){
@@ -83,10 +79,10 @@ int Recive(int sockfd,void *buf,size_t len,int flags){
         }else if(bytes_recv == 0){
             break; // no data recived from sockfd
         }
-        DLOG(INFO) << "recv "<< bytes_recv << " bytes ...";
         bytes_left -= bytes_recv;
         ptr += bytes_recv;
     }
     return len-bytes_left;
 }
+
 #endif

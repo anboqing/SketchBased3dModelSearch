@@ -24,17 +24,17 @@
 
 class Task{
 public:
-    enum task_type{
-        ReadTask,WriteTask
-    };
+
+    Task():sockfd_(5),epollfd_(4){}
+
+    Task(int fd,int epollfd):sockfd_(fd),epollfd_(epollfd){}
+
     int sockfd_;
-    unsigned int data_size_; 
-    task_type type_;
-    std::string data_;
+    int epollfd_;
+
     Task& operator=(const Task& t){
         sockfd_ = t.sockfd_;
-        data_size_ = t.data_size_;
-        data_ = t.data_;
+        epollfd_ = t.epollfd_;
         return *this;
     }
 };

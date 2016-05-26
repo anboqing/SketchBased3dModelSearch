@@ -84,14 +84,14 @@ ThreadPoolManager::~ThreadPoolManager(){
 }
 
 void ThreadPoolManager::add_task(const Task& t){
-    LockGuarde lock(mutex_);
-    LOG(INFO) << "add task ..";
+    //LockGuarde lock(mutex_);
+    DLOG(INFO) << "add task ..";
     if(!pool_is_open_){
-        mutex_.unlock();
+        //mutex_.unlock();
         LOG(ERROR) << "Thread pool is not open";
         return;
     }
-
+    DLOG(INFO) << " notify worker " ;
     task_queue_.push(t);
     // 唤醒一个等待的进程
     cond_var_.notify();
@@ -99,12 +99,12 @@ void ThreadPoolManager::add_task(const Task& t){
 
 void ThreadPoolManager::get_task(Task *t){
     LockGuarde lock(mutex_);
-    LOG(INFO) << "get task .. ";
     if(!pool_is_open_){
         mutex_.unlock();
         LOG(ERROR) << "Thread Pool is not open";
         return;
     }
+    DLOG(INFO) << "wait task .. ";
     // 任务队列为空就等待
     while(task_queue_.size() == 0){
         cond_var_.wait();
@@ -112,4 +112,5 @@ void ThreadPoolManager::get_task(Task *t){
     // 任务队列不为空就取出一个任务
     (*t) = task_queue_.front();
     task_queue_.pop();
+    DLOG(INFO) << "get task complete ";
 }

@@ -117,8 +117,6 @@ int main(int argc,char** argv){
     LoadData2stdVec(vocabulary_path,vocabulary);
     LOG(INFO) << "vocabulary size : "<<vocabulary.size();
 
-
-
     bool stop = false;
     while(!stop){
         cout << " (enter quit to exit) " << endl; 
